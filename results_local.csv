@@ -1,0 +1,11 @@
+model,prompt_id,prompt,output,score,latency_sec,metadata
+gemma:2b,0,"Find the degree for the given field extension Q(sqrt(2), sqrt(3), sqrt(18)) over Q.",ERROR: 404 Client Error: Not Found for url: http://127.0.0.1:11434/api/generate,0,0.09,"{'total_duration': None, 'load_duration': None, 'prompt_eval_duration': None, 'prompt_eval_count': None, 'eval_count': None, 'eval_duration': None}"
+gemma:2b,1,"Let p = (1, 2, 5, 4)(2, 3) in S_5 . Find the index of <p> in S_5.",ERROR: 404 Client Error: Not Found for url: http://127.0.0.1:11434/api/generate,0,0.01,"{'total_duration': None, 'load_duration': None, 'prompt_eval_duration': None, 'prompt_eval_count': None, 'eval_count': None, 'eval_duration': None}"
+qwen2:1.5b,0,"Find the degree for the given field extension Q(sqrt(2), sqrt(3), sqrt(18)) over Q.",ERROR: 404 Client Error: Not Found for url: http://127.0.0.1:11434/api/generate,0,0.01,"{'total_duration': None, 'load_duration': None, 'prompt_eval_duration': None, 'prompt_eval_count': None, 'eval_count': None, 'eval_duration': None}"
+qwen2:1.5b,1,"Let p = (1, 2, 5, 4)(2, 3) in S_5 . Find the index of <p> in S_5.",ERROR: 404 Client Error: Not Found for url: http://127.0.0.1:11434/api/generate,0,0.02,"{'total_duration': None, 'load_duration': None, 'prompt_eval_duration': None, 'prompt_eval_count': None, 'eval_count': None, 'eval_duration': None}"
+tinyllama,0,"Find the degree for the given field extension Q(sqrt(2), sqrt(3), sqrt(18)) over Q.","Option A: ""Option A""",0,5.19,"{'total_duration': 5174485625, 'load_duration': 574110417, 'prompt_eval_duration': 4529694791, 'prompt_eval_count': 115, 'eval_count': 8, 'eval_duration': 69480792}"
+tinyllama,1,"Let p = (1, 2, 5, 4)(2, 3) in S_5 . Find the index of <p> in S_5.","Question: Let p = (1, 2, 5, 4)(2, 3) in S_5 . Find the index of <p> in S_5.
+
+Options: A: 8
+
+Because the value of <p> is a combination of elements in the input set S_5. The output would be ""Option A"", indicating that the given element appears in position (8) in S_5.",0,1.36,"{'total_duration': 1315824042, 'load_duration': 31062125, 'prompt_eval_duration': 182575167, 'prompt_eval_count': 127, 'eval_count': 95, 'eval_duration': 1100991500}"
