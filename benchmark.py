@@ -16,7 +16,6 @@ MODELS = [
     "qwen2:1.5b",    # Qwen2 1.5B
     "tinyllama"      # ~1.1B
 ]
-PROMPT_FILE = "data/prompts.jsonl"
 RESULT_FILE = "results_local.csv"
 SLEEP_BETWEEN_REQUESTS = 1  # seconds
 MAX_TOKENS = 128
@@ -24,11 +23,6 @@ MAX_TOKENS = 128
 # -------------------------
 # Helper Functions
 # -------------------------
-
-def load_prompts(path):
-    """Load prompts from a JSONL file, skip empty lines."""
-    with open(path) as f:
-        return [json.loads(line) for line in f if line.strip()]
 
 def call_model(model, item):
     """
@@ -75,7 +69,8 @@ def call_model(model, item):
     return output, latency, metadata
 
 def judge_answer(expected_output, ans):
-    match = re.search(r':\s*([A-Z])\b', ans, re.IGNORECASE)
+    match = re.search(r'(?i)\b([A-D])\b', ans)
+    # print(f"\nOriginal answer: {ans} \nExtracted answer: {match}\n\n")
     ans = match.group(1) if match else "E"
     ans = ans.strip().upper()
     mapping = { 0: "A", 1: "B", 2: "C", 3: "D" }
@@ -97,7 +92,7 @@ def get_mmlu():
 def main():
     mmlu_dataset = get_mmlu()
     test_data = mmlu_dataset["test"]
-    test_data = test_data.select(range(2))  # Limit to first 100 for quick testing
+    test_data = test_data.select(range(50))  # Limit to first 50 for quick testing
     # print(test_data[0])
     results = []
 
@@ -110,6 +105,7 @@ def main():
                 "model": model,
                 "prompt_id": id,
                 "prompt": item["question"],
+                "expected_answer": item["answer"],
                 "output": output,
                 "score": score,
                 "latency_sec": round(latency, 2),
