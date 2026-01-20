@@ -94,12 +94,12 @@ Run the benchmark (adjust `MODELS` in `benchmark.py` or environment variables as
 python3 benchmark.py
 ```
 
-<!-- Run tests or example harnesses:
+Run tests or example harnesses:
 
 ```bash
 python3 benchmark_test.py
 python3 test.py
-``` -->
+```
 
 ## Plotting and visualizations
 
@@ -144,6 +144,44 @@ Why the heatmap is useful
 - `latency_heatmap.png` (or `eval_duration_heatmap.png` / `cost_heatmap.png` depending on metric) — binned 2D heatmap.
 
 If you rename files or want plots placed into a specific directory, each script accepts parameters or writes into the `plots/` folder by default.
+
+## Running Ollama locally (recommended for local benchmarks)
+
+This project uses a local Ollama server by default (the benchmark scripts call `http://127.0.0.1:11434/api/generate`). If you want to run models locally, here are quick steps for macOS (adjust for other OSes):
+
+1. Install Ollama (macOS/Homebrew):
+
+```bash
+brew install ollama
+```
+
+2. Pull models you want to benchmark (examples):
+
+```bash
+ollama pull gemma:2b
+ollama pull qwen2:1.5b
+ollama pull tinyllama
+```
+
+Make sure the model tags you pull match `MODELS` in `benchmark.py` (e.g. `gemma:2b`).
+
+3. Start the Ollama server:
+
+```bash
+ollama serve
+```
+
+By default the server listens on `127.0.0.1:11434` and the benchmark scripts use the `/api/generate` endpoint. If you run Ollama on a different host/port, update the `url` in `benchmark.py` accordingly.
+
+4. Optional: list pulled models
+
+```bash
+ollama list
+```
+
+Notes:
+- Ollama responses often include metadata fields (e.g. `total_duration`, `prompt_eval_duration`, `eval_duration`) that the plotting scripts attempt to parse; ensure your Ollama version returns those fields if you rely on duration-based plots.
+- If you prefer remote APIs (OpenAI, Anthropic, etc.), adapt `benchmark.py` to call those endpoints and return compatible metadata for plotting.
 
 ## Tips & troubleshooting
 
