@@ -34,7 +34,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
-2) Running Ollama locally (recommended for local benchmarks)
+2) Run Ollama locally
 
 This project uses a local Ollama server by default (the benchmark scripts call `http://127.0.0.1:11434/api/generate`). If you want to run models locally, here are quick steps for macOS (adjust for other OSes):
 
