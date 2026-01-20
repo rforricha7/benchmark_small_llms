@@ -4,19 +4,21 @@ Benchmarks for small LLMs focusing on latency and quality evaluation. This repos
 
 ## What this project does
 
-- Runs benchmark prompts (downloaded from huggingface) against multiple models.
+- Runs benchmark prompts (MMLU from Hugging Face) against multiple models: [MMLU abstract_algebra (test)](https://huggingface.co/datasets/cais/mmlu/viewer/abstract_algebra/test)
 - Measures latency, prompt/output token counts, and evaluation duration.
-- Saves raw results to `results_local.csv` and generates plots in `plots/`.
+- Saves raw results to `results_local.csv` and generates plots.
 - Provides small test and example scripts for quick validation.
 
 ## Repo structure
 
 - `benchmark.py` - main benchmarking script (runs prompts and records metrics).
-- `benchmark_test.py` - an example / test harness for the benchmark logic.
-- `chart.py`, `latency_chart.py` - plotting utilities used to create visualizations in `plots/`.
-- `results_local.csv` - example output from a previous run.
-- `plots/` - folder containing generated PNG charts (token counts vs latency/duration, etc.).
+    - generates `results_local.csv` (example output from a previous run).
+- `chart.py` - plots average score and duration for all models
+    - generates `model_summary.csv` and `avg_by_model_<>.png` plots
+- `plot_all_latency_chart.py`,  `latency_heatmap.py`  - plotting utilities used to create visualizations.
+    - `all_scatter_latency_plots/`, `heatmaps/` - folder containing generated PNG charts (token counts vs latency/duration, etc.).
 - `requirements.txt` - Python dependencies for running the project.
+- `benchmark_test.py` - an example / test harness for the benchmark judgement logic.
 - `test.py` - small quick-run script or smoke test.
 
 ## Quickstart
@@ -32,10 +34,44 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+2) Running Ollama locally (recommended for local benchmarks)
 
-2) Inspect or customise prompts
+This project uses a local Ollama server by default (the benchmark scripts call `http://127.0.0.1:11434/api/generate`). If you want to run models locally, here are quick steps for macOS (adjust for other OSes):
 
-The prompts are stored in `data/prompts.jsonl`. Each line is a single JSON object representing one prompt/test case.
+    1. Install Ollama (macOS/Homebrew):
+
+    ```bash
+    brew install ollama
+    ```
+
+    2. Pull models you want to benchmark (examples):
+
+    ```bash
+    ollama pull gemma:2b
+    ollama pull qwen2:1.5b
+    ollama pull tinyllama
+    ```
+
+    Make sure the model tags you pull match `MODELS` in `benchmark.py` (e.g. `gemma:2b`).
+
+    3. Start the Ollama server:
+
+    ```bash
+    ollama serve
+    ```
+
+    By default the server listens on `127.0.0.1:11434` and the benchmark scripts use the `/api/generate` endpoint. If you run Ollama on a different host/port, update the `url` in `benchmark.py` accordingly.
+
+    4. Optional: list pulled models
+
+    ```bash
+    ollama list
+    ```
+
+Notes:
+- Ollama responses often include metadata fields (e.g. `total_duration`, `prompt_eval_duration`, `eval_duration`) that the plotting scripts attempt to parse; ensure your Ollama version returns those fields if you rely on duration-based plots.
+- If you prefer remote APIs (OpenAI, Anthropic, etc.), adapt `benchmark.py` to call those endpoints and return compatible metadata for plotting.
+
 
 3) Run a benchmark
 
@@ -110,12 +146,23 @@ After running a benchmark, use the included plotting scripts to create visualiza
 	python3 chart.py
 	# -> writes model_summary.csv, avg_by_model_score.png, avg_by_model_durations.png
 	```
+    - Output files produced by chart.py:
+        - `avg_by_model_score.png` — summary chart of average score per model.
+
+        ![Average score by model](avg_by_model_score.png)
+
+        - `avg_by_model_durations.png` — summary chart of average evaluation duration per model.
+
+        ![Average evaluation duration by model](avg_by_model_durations.png)
 
 - Diagnostic latency scatter plots (per-model markers, annotations):
 	```bash
 	python3 plot_all_latency_charts.py
 	# -> writes several plots under all_scatter_latency_plots/ 
 	```
+    - `all_scatter_latency_plots/2_eval_latency_vs_output_tokens.png` — Diagnostic scatter plot (eval latency vs output token count)
+
+    ![Eval latency vs output tokens](all_scatter_latency_plots/2_eval_latency_vs_output_tokens.png)
 
 - Latency / Cost heatmap (best for density & cost insight):
 	```bash
@@ -143,45 +190,7 @@ Why the heatmap is useful
 - `prompt_tokens_vs_prompt_duration.png`, `output_tokens_vs_eval_duration.png`, `prompt_tokens_vs_latency.png`, `output_tokens_vs_latency.png`, `total_tokens_vs_latency.png` — diagnostic scatter plots.
 - `latency_heatmap.png` (or `eval_duration_heatmap.png` / `cost_heatmap.png` depending on metric) — binned 2D heatmap.
 
-If you rename files or want plots placed into a specific directory, each script accepts parameters or writes into the `plots/` folder by default.
 
-## Running Ollama locally (recommended for local benchmarks)
-
-This project uses a local Ollama server by default (the benchmark scripts call `http://127.0.0.1:11434/api/generate`). If you want to run models locally, here are quick steps for macOS (adjust for other OSes):
-
-1. Install Ollama (macOS/Homebrew):
-
-```bash
-brew install ollama
-```
-
-2. Pull models you want to benchmark (examples):
-
-```bash
-ollama pull gemma:2b
-ollama pull qwen2:1.5b
-ollama pull tinyllama
-```
-
-Make sure the model tags you pull match `MODELS` in `benchmark.py` (e.g. `gemma:2b`).
-
-3. Start the Ollama server:
-
-```bash
-ollama serve
-```
-
-By default the server listens on `127.0.0.1:11434` and the benchmark scripts use the `/api/generate` endpoint. If you run Ollama on a different host/port, update the `url` in `benchmark.py` accordingly.
-
-4. Optional: list pulled models
-
-```bash
-ollama list
-```
-
-Notes:
-- Ollama responses often include metadata fields (e.g. `total_duration`, `prompt_eval_duration`, `eval_duration`) that the plotting scripts attempt to parse; ensure your Ollama version returns those fields if you rely on duration-based plots.
-- If you prefer remote APIs (OpenAI, Anthropic, etc.), adapt `benchmark.py` to call those endpoints and return compatible metadata for plotting.
 
 ## Tips & troubleshooting
 
@@ -191,7 +200,7 @@ Notes:
 
 ## Extending the benchmark
 
-- Add prompts to `data/prompts.jsonl` or change the dataset in `benchmark.py`.
+- Add the dataset in `benchmark.py`, of different subsets like `all`, `high_school_chemistry`, `college_mathematics`.
 - Add model-specific pricing to produce more accurate cost heatmaps, or extend `latency_heatmap.py` to accept a pricing table per model.
 
 ## Contributing
