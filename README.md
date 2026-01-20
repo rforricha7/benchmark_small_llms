@@ -50,59 +50,118 @@ python benchmark_test.py
 
 # run a quick smoke test
 python test.py
+# benchmark_small_llms
+
+Benchmarks for small LLMs focusing on latency, token usage, and quality evaluation. This repo provides scripts to run simple benchmarks, capture timing/metadata, and generate diagnostic plots (including a heatmap for density/cost insight).
+
+## What this project does
+
+- Runs benchmark prompts (from Hugging Face datasets) against models configured in `benchmark.py`.
+- Measures latency, prompt/output token counts, evaluation durations and optional metadata returned by local model endpoints.
+- Saves raw results to `results_local.csv` and generates plots in `plots/` (or a custom output dir).
+- Includes plotting utilities and example plotting scripts to visualize per-model performance, latency vs tokens, and heatmaps for expensive regions.
+
+## Repo structure (key files)
+
+- `benchmark.py` - main benchmarking script (runs prompts and records metrics to `results_local.csv`).
+- `benchmark_test.py` / `test.py` - small smoke tests / harnesses.
+- `chart.py` - summary charts & model-level aggregates (now writes `model_summary.csv`).
+- `plot_all_latency_charts.py` - diagnostic scatter plots (per-model colors, markers, and annotations)that saves multiple plot filenames for compatibility.
+- `latency_heatmap.py` - NEW: generates 2D heatmaps (prompt tokens x output tokens) colored by latency, eval duration, or cost (default: latency)
+    --usage python latency_heatmap.py --metric 
+- `results_local.csv` - example or output CSV with columns like `model,prompt_id,output,score,latency_sec,metadata`.
+- `all_scatter_latency_plots/` -  output directory for generated scatter plots (PNG format).
+- `heatmaps/` - output directory for generated heatmap plots (PNG format).
+- `requirements.txt` - Python dependencies.
+
+## Quickstart
+
+Requirements:
+- Python 3.10+ recommended.
+- A virtualenv and pip.
+
+Install deps and activate venv:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-Notes:
-- Some scripts may expect environment variables or a model endpoint. Check the top of the script for required configuration and API keys.
-- `results_local.csv` will be overwritten/updated by runs and contains the raw per-prompt metrics.
+Run the benchmark (adjust `MODELS` in `benchmark.py` or environment variables as needed):
 
-## Outputs and plots
+```bash
+python3 benchmark.py
+```
 
-- After a run, plots are created/updated in the `plots/` directory. Example filenames include:
-	- `prompt_tokens_vs_latency.png`
-	- `output_tokens_vs_latency.png`
-	- `output_tokens_vs_eval_duration.png`
-	- `total_tokens_vs_latency.png`
-- `avg_score_by_model.png` is an example summary plot (if evaluation scoring is implemented and available).
+<!-- Run tests or example harnesses:
+
+```bash
+python3 benchmark_test.py
+python3 test.py
+``` -->
+
+## Plotting and visualizations
+
+After running a benchmark, use the included plotting scripts to create visualizations. Examples:
+
+- Summary chart (average score by model + durations):
+	```bash
+	python3 chart.py
+	# -> writes model_summary.csv, avg_by_model_score.png, avg_by_model_durations.png
+	```
+
+- Diagnostic latency scatter plots (per-model markers, annotations):
+	```bash
+	python3 plot_all_latency_charts.py
+	# -> writes several plots under all_scatter_latency_plots/ 
+	```
+
+- Latency / Cost heatmap (best for density & cost insight):
+	```bash
+	# latency heatmap (prompt tokens X, output tokens Y, color=latency)
+	python3 latency_heatmap.py --metric latency
+
+	# cost heatmap (requires --cost-per-token)
+	python3 latency_heatmap.py --metric cost --cost-per-token 0.000002
+
+    # eval_duration heatmap
+    python3 latency_heatmap.py --metric eval_duration
+
+    # ->writes plots under heatmaps/
+	```
+
+Why the heatmap is useful
+- Shows “expensive regions” where certain prompt/output token combinations produce high latency or cost.
+- Helps define routing rules (send small prompts to fast models, larger prompts to higher-capacity models).
+
+## Output filenames to expect
+
+- `results_local.csv` — raw per-call results from `benchmark.py`.
+- `model_summary.csv` — per-model aggregated metrics produced by `chart.py`.
+- `avg_score_by_model.png`, `avg_score_by_model_durations.png` — summary visuals.
+- `prompt_tokens_vs_prompt_duration.png`, `output_tokens_vs_eval_duration.png`, `prompt_tokens_vs_latency.png`, `output_tokens_vs_latency.png`, `total_tokens_vs_latency.png` — diagnostic scatter plots.
+- `latency_heatmap.png` (or `eval_duration_heatmap.png` / `cost_heatmap.png` depending on metric) — binned 2D heatmap.
+
+If you rename files or want plots placed into a specific directory, each script accepts parameters or writes into the `plots/` folder by default.
+
+## Tips & troubleshooting
+
+- If plots appear as a single color, ensure your CSV `model` column has distinct labels; the plotting scripts map colors by categorical model names.
+- If durations in metadata look huge (e.g., in the billions), scripts include heuristics to convert nanoseconds -> seconds; confirm the metadata units your model endpoint returns.
+- For crowded scatterplots consider switching to heatmaps (density) or annotating only medians to reduce clutter.
 
 ## Extending the benchmark
 
-- Add or change prompts in `data/prompts.jsonl`.
-- Modify `benchmark.py` to point to different model endpoints or change sampling/parameters.
-- Use the plotting helpers in `chart.py` and `latency_chart.py` to create custom visualizations.
-
-## Tests and validation
-
-- `benchmark_test.py` contains quick checks of the benchmark functions. Run it with:
-
-```bash
-python benchmark_test.py
-```
-
-If you add tests, follow the pattern used in the existing test files and keep them lightweight so they run quickly.
-
-## Typical development workflow
-
-1. Create/activate virtualenv and install deps
-2. Edit prompts or benchmarking parameters
-3. Run `python benchmark.py` to collect results
-4. Open plots in `plots/` or inspect `results_local.csv`
-
-## Troubleshooting
-
-- If plots don't appear, ensure the plotting libraries from `requirements.txt` are installed and that `plots/` is writable.
-- If a script needs credentials for a model API, set the appropriate environment variables (consult the top of the Python script for exact names).
+- Add prompts to `data/prompts.jsonl` or change the dataset in `benchmark.py`.
+- Add model-specific pricing to produce more accurate cost heatmaps, or extend `latency_heatmap.py` to accept a pricing table per model.
 
 ## Contributing
 
-Contributions are welcome. For small fixes, open a PR with a clear description of the change and a short test or example demonstrating it.
+PRs welcome. For larger changes, open an issue describing what you'd like to add.
 
 ## License
 
-See the `LICENSE` file in this repository for license terms.
-
-## Contact / Notes
-
-If you want help adding support for a new model or integrating this benchmark into a CI pipeline, open an issue with the details and a sample model endpoint.
+See `LICENSE` for license terms.
 
 Happy benchmarking!

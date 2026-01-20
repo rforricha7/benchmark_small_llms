@@ -22,5 +22,17 @@ def test_judge_answer():
     ans = "I am not sure about the answer."
     assert judge_answer(expected_output, ans) == 0
 
-# if __name__ == "__main__":
-    # test_judge_answer()
+    # Test case 5: Answer with extra text
+    expected_output = 2  # Corresponds to "C"
+    ans = "answer is C: 2 "
+    assert judge_answer(expected_output, ans) == 1
+
+    # Test case 6
+    expected_output = 2  # Corresponds to "C"
+    ans = "answer is (C)  "
+    assert judge_answer(expected_output, ans) == 1
+
+    print("All test cases passed!")
+
+if __name__ == "__main__":
+    test_judge_answer()

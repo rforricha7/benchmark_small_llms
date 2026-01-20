@@ -92,7 +92,7 @@ def get_mmlu():
 def main():
     mmlu_dataset = get_mmlu()
     test_data = mmlu_dataset["test"]
-    test_data = test_data.select(range(50))  # Limit to first 50 for quick testing
+    test_data = test_data.select(range(100))  # Limit to first 100 for quick testing
     # print(test_data[0])
     results = []
 
